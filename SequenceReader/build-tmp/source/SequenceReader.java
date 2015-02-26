@@ -135,8 +135,8 @@ public void writeMainViewPairs(int x) {
 }
 
 public void initializeAlgorithm() {
-    BufferedReader reader1 = createReader("DUT_BUCAI.txt");
-    BufferedReader reader2 = createReader("DUT_CANAL.txt");
+    BufferedReader reader1 = createReader("input1.txt");
+    BufferedReader reader2 = createReader("input2.txt");
 
     try {
         firstSeq = reader1.readLine();
