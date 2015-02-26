@@ -1,5 +1,6 @@
 String firstSeq;
 String secondSeq;
+int window = 7;
 int[][] grid;
 ArrayList<Pair> pairs;
 ArrayList<CharPair> charPairs;
@@ -10,7 +11,14 @@ void setup() {
     matrixFill();
     traceBack();
     pairs = sortPairs(pairs);
-    displayOverview();
+    calculateOutput();
+    writeOverviewPairs();
+}
+
+void draw() {
+    if(mouseY<sketchHeight() && mouseY > sketchHeight()-overviewHeight()) {
+        writeMainViewPairs(mouseX);
+    }
 }
 
 public int sketchWidth() {
@@ -29,7 +37,7 @@ public int overviewHeight() {
     return int(sketchHeight() * 0.2);
 }
 
-public void displayOverview() {
+public void calculateOutput() {
     charPairs = new ArrayList<CharPair>();
     int textSize = overviewWidth()/(max(firstSeq.length(), secondSeq.length()) + pairs.size());
     fill(150);
@@ -39,62 +47,76 @@ public void displayOverview() {
     int i = 0;
     int j = 0;
     int k = 0;
-    int overallIndex = 0;
     while(i<firstSeq.length() && j<secondSeq.length()) {
-        print(i, ", ", j, "\n");
-        print(pairs.get(k).x, ", ", pairs.get(k).y, "\n");
-
         if((i == pairs.get(k).x && j != pairs.get(k).y) || (i >= firstSeq.length())) {
-            print("skip first\n");
-            fill(0);
             charPairs.add(new CharPair(' ', secondSeq.charAt(j), false));
-            outputText(' ', secondSeq.charAt(j), overallIndex, textSize);
             j++;
-            overallIndex++;
         } else if((i != pairs.get(k).x && j == pairs.get(k).y) || (j >= secondSeq.length())) {
-            print("skip second\n");
-            fill(0);
             charPairs.add(new CharPair(firstSeq.charAt(i), ' ', false));
-            outputText(firstSeq.charAt(i), ' ', overallIndex, textSize);
             i++;
-            overallIndex++;
         } else if(i != pairs.get(k).x && j != pairs.get(k).y) {
-            print("skip both\n");
-            fill(0);
-            outputText(firstSeq.charAt(i), secondSeq.charAt(j), overallIndex, textSize);
+            charPairs.add(new CharPair(firstSeq.charAt(i), secondSeq.charAt(j), false));
             i++;
             j++;
-            overallIndex++;
         } else if(i == pairs.get(k).x && j == pairs.get(k).y) {
-            print("pair\n");
-            fill(220, 39, 39);
-            outputText(firstSeq.charAt(i), secondSeq.charAt(j), overallIndex, textSize);
+            charPairs.add(new CharPair(firstSeq.charAt(i), secondSeq.charAt(j), true));
             i++;
             j++;
-            overallIndex++;
             k = k<pairs.size()-1 ? k+1 : k;
         }
     }
 }
 
-public void outputText(char top, char bottom, int location, int size) {
-    text(top, location*size, sketchHeight()-(overviewHeight()/2)+size+2);
-    text(bottom, location*size, sketchHeight()-(overviewHeight()/2));
+public void writeOverviewPairs() {
+    int textSize = overviewWidth()/charPairs.size();
+    textSize(textSize);
+    for(int i=0; i<charPairs.size(); i++) {
+        CharPair current = charPairs.get(i);
+
+        if(current.isPair) {
+            fill(220, 39, 39);
+        }
+        else {
+            fill(0);
+        }
+
+        text(current.char1, i*textSize, sketchHeight()-(overviewHeight()/2)+textSize+2);
+        text(current.char2, i*textSize, sketchHeight()-(overviewHeight()/2));
+    }
 }
 
-// public boolean isEnd(int i, int j) {
-//     if(i>=firstSeq.length() || j>= secondSeq.length()) {
-//         return true;
-//     }
-//     return false;
-// }
+public void writeMainViewPairs(int x) {
+    fill(255);
+    rect(0, 0, sketchWidth(), sketchHeight()-overviewHeight());
+    int middleIndex = int(((float)x/(float)sketchWidth()) * charPairs.size());
+    if(middleIndex < window) {
+        middleIndex = window;
+    }
+    if(middleIndex >= charPairs.size() - window) {
+        middleIndex = charPairs.size() - 1 - window;
+    }
 
-// public boolean isPair(int i, int j, int k) {
-//     if(i == pairs.get(k).x && j == pairs.get(k).y) {
-//         return true;
-//     }
-//     return false;
-// }
+    int textSize = sketchWidth()/(window * 2);
+    textSize(textSize);
+
+    for(int i=middleIndex-window; i<middleIndex+window; i++) {
+        CharPair current = charPairs.get(i);
+
+        if(current.isPair) {
+            fill(220, 39, 39);
+        }
+        else {
+            fill(0);
+        }
+
+        int xCoord = (i-(middleIndex-window))*textSize;
+        int yCoord = (sketchHeight()-overviewHeight())/2;
+
+        text(current.char1, xCoord, yCoord + textSize + 2);
+        text(current.char2, xCoord, yCoord);
+    }
+    
+}
 
 public void initializeAlgorithm() {
     BufferedReader reader1 = createReader("DUT_BUCAI.txt");
